@@ -1,0 +1,145 @@
+<%@page import="java.util.Vector"%>
+<%@page import="java.io.FileWriter"%>
+<%@page import="java.io.BufferedWriter"%>
+<%@page import="java.io.File"%>
+<%@page import="java.io.Writer"%>
+<%@page import="com.apps.Logcreation.Log"%>
+<%@page import="com.apps.Database.DatabaseFile"%>
+<%@page import="java.sql.*" %>
+<%@page  session="true" %>
+<%
+try
+{
+    Logger logger = Logger.getLogger("com.apps.Database");  
+    
+    //getting value from 
+    String username = request.getParameter("username");
+    String password = request.getParameter("password");
+    
+    //session 
+    session.setAttribute("x", username);
+   
+    int count = 0;
+    
+    Vector<Object> rsp = null;
+    Statement st = null;
+    ResultSet rs = null;
+    Connection con = null;
+   
+    //jdbc coding
+    try
+    {             
+        if( ((username!=null) && (!username.trim().equals(""))) && ((password!=null) && (!password.trim().equals(""))))
+        {
+            String sql = "SELECT * "
+                    + "FROM userdetails "
+                    + "WHERE User_Username = '"+username+"' and User_Password  = '"+password+"'";
+
+            logger.info("sql:"+sql);	  
+            
+            //CALLING DATABASE Class           
+            rsp = DatabaseFile.getInstance().codeselect(sql);
+
+            st = (Statement) rsp.get(0);
+            rs = (ResultSet) rsp.get(1);
+            con = (Connection) rsp.get(2);
+
+            while(rs.next())
+            {
+                count = rs.getInt(1);
+                
+                logger.info("count:"+count);	    
+              
+                //page redirection
+                %>
+                     <jsp:forward page="profile.jsp"></jsp:forward>
+                <%                                               
+                    
+            }                                               
+                 %>
+                 <jsp:forward page="index.jsp">
+                     <jsp:param name="msg" value="Incorrect Username or Password"/>
+                 </jsp:forward>
+                 <%           
+        }
+        else
+        {
+             //page redirection
+                 %>
+                 <jsp:forward page="index.jsp">
+                     <jsp:param name="msg" value="Please Fill Username or Password"/>
+                 </jsp:forward>
+                 <%
+        }
+    }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+            
+            logger.error("Error:", e);
+            logger.warn("This is a warning message");
+            logger.trace("This message will not be logged since log level is set as DEBUG");
+        }
+        finally
+        {
+            try
+            {
+                if(st != null)
+                {
+                    st.close(); 
+                    st = null;
+                }
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+                
+                logger.error("Error:", e);
+                logger.warn("This is a warning message");
+                logger.trace("This message will not be logged since log level is set as DEBUG");
+            }
+            
+            try
+            {
+                if(rs != null)
+                {
+                    rs.close(); 
+                    rs = null;
+                }
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+                
+                logger.error("Error:", e);
+                logger.warn("This is a warning message");
+                logger.trace("This message will not be logged since log level is set as DEBUG");
+            }
+            
+            try
+            {
+                if(con != null)
+                {
+                    DatabaseFile.cp.surrenderConnection(con);
+                    
+                    con.close();
+                    con = null;
+                }
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+                
+                logger.error("Error:", e);
+                logger.warn("This is a warning message");
+                logger.trace("This message will not be logged since log level is set as DEBUG");
+            }
+            
+            rsp = null;
+        }
+}
+catch(Exception e)
+{
+    e.printStackTrace();
+}
+%>
